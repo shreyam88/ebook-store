@@ -21,15 +21,43 @@ A full-stack e-book selling platform where users can browse books, purchase e-bo
 - Responsive UI
 - Secure API routes
 
+## 📸 Screenshots
+
+### 🏠 Home Page
+
+![Home Page](screenshots/home.png)
+
+### 📖 Book Details
+
+![Book Details](screenshots/book-details.png)
+
+### 🔐 Login
+
+![Login](screenshots/login.png)
+
+### 💳 Payment
+
+![Payment](screenshots/payment.png)
+
+### 📚 My Library
+
+![My Library](screenshots/library.png)
+
+### 👨‍💼 Admin Dashboard
+
+![Admin Dashboard](screenshots/admin-dashboard.png)
+
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - React
 - Vite
 - JavaScript
 - CSS
 
 ### Backend
+
 - Node.js
 - Express.js
 - MongoDB
@@ -38,9 +66,11 @@ A full-stack e-book selling platform where users can browse books, purchase e-bo
 - Multer
 
 ### Payment
+
 - Razorpay Test Mode
 
 ### Security
+
 - Helmet
 - Express Rate Limit
 - JWT authentication
@@ -64,6 +94,14 @@ ebook-store/
 │   ├── routes/
 │   ├── uploads/
 │   └── server.js
+│
+├── screenshots/
+│   ├── home.png
+│   ├── book-details.png
+│   ├── login.png
+│   ├── payment.png
+│   ├── library.png
+│   └── admin-dashboard.png
 │
 ├── .gitignore
 └── README.md
