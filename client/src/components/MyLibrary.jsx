@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function MyLibrary({ onBack, onViewBook }) {
   const [purchases, setPurchases] = useState([]);
@@ -17,13 +18,13 @@ function MyLibrary({ onBack, onViewBook }) {
 
       try {
         const response = await fetch(
-          "http://localhost:5000/api/purchases/my",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  `${API_URL}/api/purchases/my`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
         const data = await response.json();
 
@@ -51,7 +52,7 @@ function MyLibrary({ onBack, onViewBook }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/purchases/download/${bookId}`,
+        `${API_URL}/api/purchases/download/${bookId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -140,7 +141,7 @@ function MyLibrary({ onBack, onViewBook }) {
               >
                 <div className="book-cover">
                   <img
-                    src={`http://localhost:5000/uploads/covers/${purchase.book.coverImage}`}
+                    src={`${API_URL}/uploads/covers/${purchase.book.coverImage}`}
                     alt={purchase.book.title}
                   />
                 </div>

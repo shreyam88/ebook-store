@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function AdminDashboard({ onBack }) {
   const [books, setBooks] = useState([]);
@@ -46,7 +47,7 @@ function AdminDashboard({ onBack }) {
   const fetchBooks = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/books"
+        `${API_URL}/api/books`
       );
 
       const data = await response.json();
@@ -75,14 +76,13 @@ function AdminDashboard({ onBack }) {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/stats",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+  `${API_URL}/api/admin/stats`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
       const data = await response.json();
 
       if (response.ok) {
@@ -119,13 +119,13 @@ function AdminDashboard({ onBack }) {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/purchases",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  `${API_URL}/api/admin/purchases`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
       const data = await response.json();
 
@@ -158,14 +158,13 @@ function AdminDashboard({ onBack }) {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/users",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+  `${API_URL}/api/admin/users`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
       const data = await response.json();
 
       if (response.ok) {
@@ -255,10 +254,10 @@ function AdminDashboard({ onBack }) {
       setCoverFile(null);
 
       setCoverPreview(
-        editingBook
-          ? `http://localhost:5000/uploads/covers/${editingBook.coverImage}`
-          : ""
-      );
+  editingBook
+    ? `${API_URL}/uploads/covers/${editingBook.coverImage}`
+    : ""
+);
 
       return;
     }
@@ -381,19 +380,18 @@ function AdminDashboard({ onBack }) {
         );
 
         const response = await fetch(
-          "http://localhost:5000/api/books",
-          {
-            method: "POST",
+  `${API_URL}/api/books`,
+  {
+    method: "POST",
 
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
+    headers: {
+      Authorization:
+        `Bearer ${token}`,
+    },
 
-            body: form,
-          }
-        );
-
+    body: form,
+  }
+);
         const data =
           await response.json();
 
@@ -460,19 +458,18 @@ function AdminDashboard({ onBack }) {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/books/${editingBook._id}`,
-          {
-            method: "PUT",
+  `${API_URL}/api/books/${editingBook._id}`,
+  {
+    method: "PUT",
 
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
+    headers: {
+      Authorization:
+        `Bearer ${token}`,
+    },
 
-            body: form,
-          }
-        );
-
+    body: form,
+  }
+);
         const data =
           await response.json();
 
@@ -561,7 +558,7 @@ function AdminDashboard({ onBack }) {
     setCoverFile(null);
 
     setCoverPreview(
-      `http://localhost:5000/uploads/covers/${book.coverImage}`
+      `${API_URL}/uploads/covers/${book.coverImage}`
     );
 
     setMessage("");
@@ -644,17 +641,17 @@ function AdminDashboard({ onBack }) {
       setError("");
 
       const response =
-        await fetch(
-          `http://localhost:5000/api/books/${bookId}`,
-          {
-            method: "DELETE",
+  await fetch(
+    `${API_URL}/api/books/${bookId}`,
+    {
+      method: "DELETE",
 
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+    }
+  );
 
       const data =
         await response.json();
@@ -1329,9 +1326,9 @@ function AdminDashboard({ onBack }) {
                   <div className="admin-book-icon">
 
                     <img
-                      src={`http://localhost:5000/uploads/covers/${book.coverImage}`}
-                      alt={book.title}
-                    />
+  src={`${API_URL}/uploads/covers/${book.coverImage}`}
+  alt={book.title}
+/>
 
                   </div>
 

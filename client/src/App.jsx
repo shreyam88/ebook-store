@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import MyLibrary from "./components/MyLibrary";
 import AdminDashboard from "./components/AdminDashboard";
+import { API_URL } from "./config";
 
 import "./App.css";
 
@@ -65,7 +66,7 @@ function App() {
     const fetchBooks = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/books"
+          `${API_URL}/api/books`
         );
 
         const data = await response.json();
@@ -78,7 +79,7 @@ function App() {
           booksData.map(async (book) => {
             try {
               const ratingResponse = await fetch(
-                `http://localhost:5000/api/reviews/rating/${book._id}`
+                `${API_URL}/api/reviews/rating/${book._id}`
               );
 
               const ratingData =
@@ -482,7 +483,7 @@ function App() {
                     <div className="book-cover">
 
                       <img
-                        src={`http://localhost:5000/uploads/covers/${book.coverImage}`}
+                       src={`${API_URL}/uploads/covers/${book.coverImage}`}
                         alt={book.title}
                       />
 

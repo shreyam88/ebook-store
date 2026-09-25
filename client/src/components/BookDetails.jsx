@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Reviews from "./Reviews";
+import { API_URL } from "../config";
 
 function BookDetails({ bookId, onBack }) {
   const [book, setBook] = useState(null);
@@ -18,8 +19,8 @@ function BookDetails({ bookId, onBack }) {
     const fetchBook = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/books/${bookId}`
-        );
+  `${API_URL}/api/books/${bookId}`
+);
 
         const data = await response.json();
 
@@ -49,7 +50,7 @@ function BookDetails({ bookId, onBack }) {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/purchases/access/${bookId}`,
+          `${API_URL}/api/purchases/access/${bookId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -89,7 +90,7 @@ function BookDetails({ bookId, onBack }) {
 
       // 1. Create Razorpay order
       const response = await fetch(
-        "http://localhost:5000/api/payments/create-order",
+        `${API_URL}/api/payments/create-order`,
         {
           method: "POST",
 
@@ -145,7 +146,7 @@ function BookDetails({ bookId, onBack }) {
             setMessage("Verifying payment...");
 
             const verifyResponse = await fetch(
-              "http://localhost:5000/api/payments/verify",
+              `${API_URL}/api/payments/verify`,
               {
                 method: "POST",
 
@@ -254,7 +255,7 @@ function BookDetails({ bookId, onBack }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/purchases/download/${bookId}`,
+        `${API_URL}/api/purchases/download/${bookId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -365,7 +366,7 @@ function BookDetails({ bookId, onBack }) {
 
         <div className="details-cover">
   <img
-    src={`http://localhost:5000/uploads/covers/${book.coverImage}`}
+    src={`${API_URL}/uploads/covers/${book.coverImage}`}
     alt={book.title}
   />
 </div>

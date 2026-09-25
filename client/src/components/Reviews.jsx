@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function Reviews({ bookId }) {
   const [reviews, setReviews] = useState([]);
@@ -15,9 +16,8 @@ function Reviews({ bookId }) {
   const fetchReviews = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/reviews/${bookId}`
-      );
-
+  `${API_URL}/api/reviews/${bookId}`
+);
       const data = await response.json();
 
       if (response.ok) {
@@ -54,11 +54,11 @@ function Reviews({ bookId }) {
       setError("");
       setMessage("");
 
-      const response = await fetch(
-        "http://localhost:5000/api/reviews",
-        {
-          method: "POST",
-          headers: {
+     const response = await fetch(
+  `${API_URL}/api/reviews`,
+  {
+    method: "POST",
+    headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
