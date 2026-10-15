@@ -1,12 +1,19 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
+const dns = require("dns");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
-require("dotenv").config();
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch (e) {
+  // Ignored in restricted environments
+}
+
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const paymentRoutes = require("./routes/paymentRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -73,7 +80,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 // ======================================
 // HELMET SECURITY HEADERS
@@ -133,6 +139,26 @@ app.use(
 );
 
 // ======================================
+// TEST & HEALTH CHECK ROUTES
+// ======================================
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "E-Book Store API is running 🚀",
+    status: "online",
+  });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    database:
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ======================================
 // MONGODB CONNECTION & SERVERLESS MIDDLEWARE
 // ======================================
 
@@ -179,25 +205,6 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ======================================
-// TEST & HEALTH CHECK ROUTES
-// ======================================
-
-app.get("/", (req, res) => {
-  res.json({
-    message: "E-Book Store API is running 🚀",
-    status: "online",
-  });
-});
-
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    database:
-      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    timestamp: new Date().toISOString(),
-  });
-});
 
 // ======================================
 // 404 HANDLER
