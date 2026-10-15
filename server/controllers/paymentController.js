@@ -4,10 +4,22 @@ const crypto = require("crypto");
 const Book = require("../models/Book");
 const Purchase = require("../models/Purchase");
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const getRazorpayInstance = () => {
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!key_id || !key_secret) {
+    console.warn("⚠️ RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not configured");
+    return null;
+  }
+
+  try {
+    return new Razorpay({ key_id, key_secret });
+  } catch (err) {
+    console.error("Razorpay init error:", err);
+    return null;
+  }
+};
 
 // =========================
 // CREATE RAZORPAY ORDER
@@ -56,6 +68,13 @@ const createOrder = async (req, res) => {
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
+
+    const razorpay = getRazorpayInstance();
+    if (!razorpay) {
+      return res.status(500).json({
+        message: "Razorpay is not configured on the server",
+      });
+    }
 
     const order = await razorpay.orders.create(options);
 
@@ -134,6 +153,13 @@ const verifyPayment = async (req, res) => {
     // =========================
     // FETCH RAZORPAY ORDER
     // =========================
+
+    const razorpay = getRazorpayInstance();
+    if (!razorpay) {
+      return res.status(500).json({
+        message: "Razorpay is not configured on the server",
+      });
+    }
 
     const order =
       await razorpay.orders.fetch(
