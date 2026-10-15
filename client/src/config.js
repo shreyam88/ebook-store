@@ -1,2 +1,2 @@
 export const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api/books";
+  import.meta.env.VITE_API_URL || "https://ebook-store-cmdx.vercel.app/api/books";
