@@ -58,6 +58,8 @@ function App() {
     };
   }, []);
 
+  const [booksError, setBooksError] = useState("");
+
   // =========================
   // FETCH BOOKS
   // =========================
@@ -65,9 +67,17 @@ function App() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
+        setBooksError("");
         const response = await fetch(
           `${API_URL}/api/books`
         );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          setBooksError(errData.error || errData.message || "Failed to load books from server");
+          setBooks([]);
+          return;
+        }
 
         const data = await response.json();
 
@@ -122,6 +132,7 @@ function App() {
           "Error fetching books:",
           error
         );
+        setBooksError("Cannot connect to server. Check server status and network.");
       } finally {
         setLoading(false);
       }
@@ -399,6 +410,15 @@ function App() {
           <p className="loading-text">
             Loading books...
           </p>
+        ) : booksError ? (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <p className="loading-text" style={{ color: "#ef4444" }}>
+              ⚠️ {booksError}
+            </p>
+            <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+              Ensure your MongoDB database is connected and MONGO_URI is configured.
+            </p>
+          </div>
         ) : books.length === 0 ? (
           <p className="loading-text">
             No books available right now.
@@ -483,8 +503,12 @@ function App() {
                     <div className="book-cover">
 
                       <img
-                       src={`${API_URL}/uploads/covers/${book.coverImage}`}
+                        src={`${API_URL}/uploads/covers/${book.coverImage}`}
                         alt={book.title}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=600";
+                        }}
                       />
 
                     </div>

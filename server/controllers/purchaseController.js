@@ -91,6 +91,14 @@ const checkBookAccess = async (req, res) => {
   try {
     const { bookId } = req.params;
 
+    // Admin has access to all books
+    if (req.user?.role === "admin") {
+      return res.status(200).json({
+        message: "Admin access granted",
+        hasAccess: true,
+      });
+    }
+
     const purchase = await Purchase.findOne({
       user: req.user.userId,
       book: bookId,
@@ -98,7 +106,7 @@ const checkBookAccess = async (req, res) => {
     });
 
     if (!purchase) {
-      return res.status(403).json({
+      return res.status(200).json({
         message: "You have not purchased this book",
         hasAccess: false,
       });
@@ -126,16 +134,19 @@ const downloadBook = async (req, res) => {
   try {
     const { bookId } = req.params;
 
-    const purchase = await Purchase.findOne({
-      user: req.user.userId,
-      book: bookId,
-      paymentStatus: "paid",
-    });
-
-    if (!purchase) {
-      return res.status(403).json({
-        message: "You have not purchased this book",
+    // Non-admin users must have purchased the book
+    if (req.user?.role !== "admin") {
+      const purchase = await Purchase.findOne({
+        user: req.user.userId,
+        book: bookId,
+        paymentStatus: "paid",
       });
+
+      if (!purchase) {
+        return res.status(403).json({
+          message: "You have not purchased this book",
+        });
+      }
     }
 
     const book = await Book.findById(bookId);

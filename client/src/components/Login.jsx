@@ -89,13 +89,14 @@ function Login({ onLogin, onSwitchToSignup }) {
         <form onSubmit={handleSubmit} className="auth-form">
 
           <div className="form-group">
-            <label>Email</label>
+            <label>Email or Username</label>
 
             <input
-              type="email"
-              placeholder="Enter your email"
+              type="text"
+              placeholder="Enter your email or username (e.g. admin)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
             />
           </div>
 

@@ -24,6 +24,8 @@ const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // ======================================
 // CORS CONFIGURATION
 // ======================================
@@ -139,6 +141,53 @@ app.use(
 );
 
 // ======================================
+// MONGODB CONNECTION & SERVERLESS CACHING
+// ======================================
+
+let cached = global._mongoose;
+if (!cached) {
+  cached = global._mongoose = { conn: null, promise: null };
+}
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  const mongoUri = process.env.MONGO_URI;
+  if (!mongoUri) {
+    const errorMsg = "MONGO_URI is not defined in environment variables";
+    console.warn(`⚠️ ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(mongoUri, {
+        serverSelectionTimeoutMS: 5000,
+        bufferCommands: false,
+      })
+      .then((m) => {
+        console.log("MongoDB connected successfully ✅");
+        return m.connection;
+      });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null;
+    console.error("MongoDB connection error:", error.message);
+    throw error;
+  }
+};
+
+// ======================================
 // TEST & HEALTH CHECK ROUTES
 // ======================================
 
@@ -149,49 +198,51 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
+  let dbStatus = "disconnected";
+  let dbError = null;
+
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    dbStatus = "connected";
+  } catch (err) {
+    dbError = err.message;
+  }
+
   res.json({
     status: "ok",
-    database:
-      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    database: dbStatus,
+    hasMongoUri: !!process.env.MONGO_URI,
+    hasRazorpayKeys: !!(
+      process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
+    ),
+    ...(dbError && { error: dbError }),
     timestamp: new Date().toISOString(),
   });
 });
 
-// ======================================
-// MONGODB CONNECTION & SERVERLESS MIDDLEWARE
-// ======================================
-
-let isConnected = false;
-
-const connectDB = async () => {
-  if (isConnected || mongoose.connection.readyState === 1) {
-    return;
-  }
-
-  const mongoUri = process.env.MONGO_URI;
-  if (!mongoUri) {
-    console.warn("⚠️ MONGO_URI is not defined in environment variables!");
-    return;
+// Ensure database connection before processing API requests
+app.use(async (req, res, next) => {
+  if (req.path === "/api/health" || req.path === "/") {
+    return next();
   }
 
   try {
-    const db = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
-    });
-    isConnected = db.connections[0].readyState === 1;
-    console.log("MongoDB connected successfully ✅");
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    next();
   } catch (error) {
-    console.error("MongoDB connection error:", error.message);
+    return res.status(503).json({
+      message: "Database connection failed",
+      error:
+        process.env.NODE_ENV === "production"
+          ? "Database service unavailable. Ensure MONGO_URI is set and MongoDB Atlas allows 0.0.0.0/0 IP access."
+          : error.message,
+    });
   }
-};
-
-// Ensure database connection before processing API requests
-app.use(async (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    await connectDB();
-  }
-  next();
 });
 
 // ======================================

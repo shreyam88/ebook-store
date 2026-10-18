@@ -94,12 +94,16 @@ const login = async (req, res) => {
       });
     }
 
-    const normalizedEmail =
-      email.trim().toLowerCase();
+    const input = email.trim();
+    const normalizedInput = input.toLowerCase();
 
-    // Find user
+    // Find user by email, name/username (case-insensitive), or admin role if 'admin' entered
     const user = await User.findOne({
-      email: normalizedEmail,
+      $or: [
+        { email: normalizedInput },
+        { name: new RegExp(`^${input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+        ...(normalizedInput === "admin" ? [{ role: "admin" }] : []),
+      ],
     });
 
     if (!user) {

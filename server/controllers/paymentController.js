@@ -88,6 +88,7 @@ const createOrder = async (req, res) => {
 
     res.status(500).json({
       message: "Unable to create payment order",
+      error: error.description || error.message,
     });
   }
 };
@@ -241,6 +242,7 @@ const verifyPayment = async (req, res) => {
 
     res.status(500).json({
       message: "Payment verification failed",
+      error: error.description || error.message,
     });
   }
 };

@@ -368,6 +368,10 @@ function BookDetails({ bookId, onBack }) {
   <img
     src={`${API_URL}/uploads/covers/${book.coverImage}`}
     alt={book.title}
+    onError={(e) => {
+      e.target.onerror = null;
+      e.target.src = "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=600";
+    }}
   />
 </div>
         {/* Content */}
