@@ -4,6 +4,7 @@ import { API_URL } from "../config";
 function MyLibrary({ onBack, onViewBook }) {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -47,10 +48,18 @@ function MyLibrary({ onBack, onViewBook }) {
     fetchPurchases();
   }, []);
 
-  const handleDownload = async (bookId, pdfFile) => {
+  const handleDownload = async (bookId, pdfFile, bookTitle) => {
     const token = localStorage.getItem("token");
 
+    if (!token) {
+      setMessage("Please login to download books.");
+      return;
+    }
+
     try {
+      setDownloadingId(bookId);
+      setMessage("Downloading your book... ⏳");
+
       const response = await fetch(
         `${API_URL}/api/purchases/download/${bookId}`,
         {
@@ -61,35 +70,53 @@ function MyLibrary({ onBack, onViewBook }) {
       );
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
         setMessage(
           data.message || "Download failed."
         );
 
+        setDownloadingId(null);
         return;
       }
 
+      // Determine filename from Content-Disposition header if present
+      const disposition = response.headers.get("content-disposition");
+      let filename = "";
+      if (disposition && disposition.includes("filename=")) {
+        const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (match && match[1]) {
+          filename = match[1].replace(/['"]/g, "").trim();
+        }
+      }
+      if (!filename) {
+        const safeTitle = (bookTitle || "ebook").replace(/[^a-zA-Z0-9_\-]/g, "_");
+        filename = `${safeTitle}.pdf`;
+      }
+
       const blob = await response.blob();
-
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
 
       link.href = url;
-      link.download = pdfFile;
+      link.download = filename;
 
       document.body.appendChild(link);
-
       link.click();
+      document.body.removeChild(link);
 
-      link.remove();
+      // Delay revocation so mobile and desktop browsers have time to process the download
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 60000);
 
-      window.URL.revokeObjectURL(url);
+      setMessage("Book downloaded successfully! 🎉");
+      setTimeout(() => setMessage(""), 5000);
     } catch (error) {
       console.error("Download error:", error);
-
       setMessage("Unable to download book.");
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -183,10 +210,12 @@ function MyLibrary({ onBack, onViewBook }) {
 
                     <button
                       className="library-action-btn download-book-btn"
+                      disabled={downloadingId === purchase.book?._id}
                       onClick={() =>
                         handleDownload(
-                          purchase.book._id,
-                          purchase.book.pdfFile
+                          purchase.book?._id,
+                          purchase.book?.pdfFile,
+                          purchase.book?.title
                         )
                       }
                     >
@@ -195,7 +224,9 @@ function MyLibrary({ onBack, onViewBook }) {
                       </span>
 
                       <span>
-                        Download PDF
+                        {downloadingId === purchase.book?._id
+                          ? "Downloading..."
+                          : "Download PDF"}
                       </span>
 
                       <span className="action-arrow">

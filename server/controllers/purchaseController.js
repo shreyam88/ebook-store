@@ -2,6 +2,8 @@ const Purchase = require("../models/Purchase");
 const Book = require("../models/Book");
 const path = require("path");
 const fs = require("fs");
+const PDFDocument = require("pdfkit");
+const { generateEbookPdf } = require("../utils/pdfGenerator");
 
 // ======================================
 // CREATE PURCHASE
@@ -157,39 +159,87 @@ const downloadBook = async (req, res) => {
       });
     }
 
+    const safeTitle = (book.title || "ebook")
+      .replace(/[^a-zA-Z0-9_\- ]/g, "")
+      .trim()
+      .replace(/\s+/g, "_");
+    const downloadFilename = `${safeTitle || "ebook"}.pdf`;
+
     const filePath = path.join(
       __dirname,
       "../uploads",
-      book.pdfFile
+      book.pdfFile || ""
     );
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        message: "PDF file not found on server",
-      });
-    }
-
-    res.download(
-      filePath,
-      book.pdfFile,
-      (error) => {
-        if (error) {
-          console.error(
-            "PDF download error:",
-            error
+    // 1. If file exists on server disk and is valid, download it directly
+    if (book.pdfFile && fs.existsSync(filePath)) {
+      try {
+        const stat = fs.statSync(filePath);
+        if (stat.isFile() && stat.size > 0) {
+          res.setHeader(
+            "Access-Control-Expose-Headers",
+            "Content-Disposition, Content-Length"
+          );
+          return res.download(
+            filePath,
+            downloadFilename,
+            (error) => {
+              if (error && !res.headersSent) {
+                console.error("PDF download error:", error);
+                res.status(500).json({
+                  message: "Download error",
+                });
+              }
+            }
           );
         }
+      } catch (statError) {
+        console.warn("Local PDF check failed, falling back to dynamic generator:", statError);
       }
-    );
-  } catch (error) {
-    console.error(
-      "Download book error:",
-      error
-    );
+    }
 
-    res.status(500).json({
-      message: "Server error",
+    // 2. If file is not present on disk (e.g. Vercel serverless environment),
+    // dynamically generate and stream a complete, beautifully designed eBook edition!
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    const chunks = [];
+
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => {
+      const pdfBuffer = Buffer.concat(chunks);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${downloadFilename}"`
+      );
+      res.setHeader("Content-Length", pdfBuffer.length);
+      res.setHeader(
+        "Access-Control-Expose-Headers",
+        "Content-Disposition, Content-Length"
+      );
+      return res.send(pdfBuffer);
     });
+
+    doc.on("error", (err) => {
+      console.error("PDF generation stream error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({
+          message: "Failed to generate eBook PDF",
+        });
+      }
+    });
+
+    generateEbookPdf(doc, book);
+    doc.end();
+
+  } catch (error) {
+    console.error("Download book error:", error);
+
+    if (!res.headersSent) {
+      res.status(500).json({
+        message: "Server error",
+      });
+    }
   }
 };
 

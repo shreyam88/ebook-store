@@ -79,6 +79,7 @@ const corsOptions = {
     "Accept",
     "Origin",
   ],
+  exposedHeaders: ["Content-Disposition", "Content-Length"],
 };
 
 app.use(cors(corsOptions));

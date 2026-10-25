@@ -8,6 +8,7 @@ function BookDetails({ bookId, onBack }) {
 
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   const [message, setMessage] = useState("");
 
@@ -254,6 +255,9 @@ function BookDetails({ bookId, onBack }) {
     }
 
     try {
+      setDownloading(true);
+      setMessage("Downloading your book... ⏳");
+
       const response = await fetch(
         `${API_URL}/api/purchases/download/${bookId}`,
         {
@@ -264,32 +268,48 @@ function BookDetails({ bookId, onBack }) {
       );
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
         setMessage(
           data.message || "Download failed."
         );
 
+        setDownloading(false);
         return;
       }
 
+      // Determine filename from Content-Disposition header if available
+      const disposition = response.headers.get("content-disposition");
+      let filename = "";
+      if (disposition && disposition.includes("filename=")) {
+        const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (match && match[1]) {
+          filename = match[1].replace(/['"]/g, "").trim();
+        }
+      }
+      if (!filename) {
+        const safeTitle = (book?.title || "ebook").replace(/[^a-zA-Z0-9_\-]/g, "_");
+        filename = `${safeTitle}.pdf`;
+      }
+
       const blob = await response.blob();
-
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
 
       link.href = url;
-
-      link.download = book.pdfFile;
+      link.download = filename;
 
       document.body.appendChild(link);
-
       link.click();
+      document.body.removeChild(link);
 
-      link.remove();
+      // Delay revocation so mobile and desktop browsers have time to process the download
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 60000);
 
-      window.URL.revokeObjectURL(url);
+      setMessage("Book downloaded successfully! 🎉");
+      setTimeout(() => setMessage(""), 5000);
 
     } catch (error) {
       console.error(
@@ -300,6 +320,8 @@ function BookDetails({ bookId, onBack }) {
       setMessage(
         "Unable to download book."
       );
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -419,8 +441,9 @@ function BookDetails({ bookId, onBack }) {
     <button
       className="purchase-btn"
       onClick={handleDownload}
+      disabled={downloading}
     >
-      Download PDF ↓
+      {downloading ? "Downloading... ⏳" : "Download PDF ↓"}
     </button>
   </>
 ) : (
