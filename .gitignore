@@ -3,3 +3,5 @@ node_modules/
 dist/
 server/uploads/*.pdf
 uploads/*.pdf
+.vercel
+.env*

@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import MyLibrary from "./components/MyLibrary";
 import AdminDashboard from "./components/AdminDashboard";
+import Navbar from "./components/Navbar";
 import { API_URL } from "./config";
 
 import "./App.css";
@@ -178,175 +179,63 @@ function App() {
   };
 
   // =========================
-  // LOGIN PAGE
-  // =========================
-
-  if (authPage === "login") {
-    return (
-      <div className="app">
-        <Login
-          onLogin={handleLogin}
-          onSwitchToSignup={() =>
-            setAuthPage("signup")
-          }
-        />
-      </div>
-    );
-  }
-
-  // =========================
-  // SIGNUP PAGE
-  // =========================
-
-  if (authPage === "signup") {
-    return (
-      <div className="app">
-        <Signup
-          onSignup={handleSignup}
-          onSwitchToLogin={() =>
-            setAuthPage("login")
-          }
-        />
-      </div>
-    );
-  }
-
-  // =========================
-  // MY LIBRARY
-  // =========================
-
-  if (currentPage === "library") {
-    return (
-      <div className="app">
-        <MyLibrary
-          onBack={() =>
-            setCurrentPage("home")
-          }
-          onViewBook={(bookId) => {
-            setSelectedBookId(bookId);
-            setCurrentPage("home");
-          }}
-        />
-      </div>
-    );
-  }
-
-  // =========================
-  // ADMIN DASHBOARD
-  // =========================
-
-  if (currentPage === "admin") {
-    return (
-      <div className="app">
-        <AdminDashboard
-          onBack={() =>
-            setCurrentPage("home")
-          }
-        />
-      </div>
-    );
-  }
-
-  // =========================
-  // BOOK DETAILS
-  // =========================
-
-  if (selectedBookId) {
-    return (
-      <div className="app">
-        <BookDetails
-          bookId={selectedBookId}
-          onBack={() =>
-            setSelectedBookId(null)
-          }
-        />
-      </div>
-    );
-  }
-
-  // =========================
-  // HOME PAGE
+  // RENDER APP
   // =========================
 
   return (
     <div className="app">
 
-      {/* =========================
-          NAVBAR
-      ========================= */}
+      {/* Global Responsive Navbar */}
+      <Navbar
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        selectedBookId={selectedBookId}
+        setSelectedBookId={setSelectedBookId}
+        authPage={authPage}
+        setAuthPage={setAuthPage}
+        user={user}
+        onLogout={handleLogout}
+      />
 
-      <nav className="navbar">
+      {authPage === "login" ? (
+        <Login
+          onLogin={handleLogin}
+          onSwitchToSignup={() => setAuthPage("signup")}
+          onBack={() => setAuthPage(null)}
+        />
+      ) : authPage === "signup" ? (
+        <Signup
+          onSignup={handleSignup}
+          onSwitchToLogin={() => setAuthPage("login")}
+          onBack={() => setAuthPage(null)}
+        />
+      ) : selectedBookId ? (
+        <BookDetails
+          bookId={selectedBookId}
+          onBack={() => setSelectedBookId(null)}
+        />
+      ) : currentPage === "library" ? (
+        <MyLibrary
+          onBack={() => setCurrentPage("home")}
+          onViewBook={(bookId) => {
+            setSelectedBookId(bookId);
+            setCurrentPage("home");
+          }}
+        />
+      ) : currentPage === "admin" ? (
+        <AdminDashboard
+          onBack={() => setCurrentPage("home")}
+        />
+      ) : (
+        <>
+          {/* =========================
+              HERO
+          ========================= */}
 
-        <div className="logo">
-          <span>📚</span>
-          E-Book Store
-        </div>
-
-        <div className="nav-links">
-
-          <a href="#home">
-            Home
-          </a>
-
-          <a href="#books">
-            Books
-          </a>
-
-          <a
-            href="#library"
-            onClick={(e) => {
-              e.preventDefault();
-              setCurrentPage("library");
-            }}
+          <main
+            className="hero-section"
+            id="home"
           >
-            My Library
-          </a>
-
-          {/* Admin Button */}
-
-          {user?.role === "admin" && (
-            <button
-              className="admin-nav-btn"
-              onClick={() =>
-                setCurrentPage("admin")
-              }
-            >
-              Admin
-            </button>
-          )}
-
-        </div>
-
-        {/* Login / Logout */}
-
-        {user ? (
-          <button
-            className="login-btn"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        ) : (
-          <button
-            className="login-btn"
-            onClick={() =>
-              setAuthPage("login")
-            }
-          >
-            Login
-          </button>
-        )}
-
-      </nav>
-
-      {/* =========================
-          HERO
-      ========================= */}
-
-      <main
-        className="hero-section"
-        id="home"
-      >
 
         <div className="hero-content">
 
@@ -585,6 +474,8 @@ function App() {
         )}
 
       </section>
+        </>
+      )}
 
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { API_URL } from "../config";
 
-function Signup({ onSignup, onSwitchToLogin }) {
+function Signup({ onSignup, onSwitchToLogin, onBack }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,10 +30,10 @@ function Signup({ onSignup, onSwitchToLogin }) {
       setLoading(true);
 
       const response = await fetch(
-  `${API_URL}/api/auth/signup`,
-  {
-    method: "POST",
-    headers: {
+        `${API_URL}/api/auth/signup`,
+        {
+          method: "POST",
+          headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -74,7 +74,8 @@ function Signup({ onSignup, onSwitchToLogin }) {
 
         <button
           className="back-btn"
-          onClick={() => window.history.back()}
+          type="button"
+          onClick={onBack ? onBack : () => window.history.back()}
         >
           ← Back
         </button>

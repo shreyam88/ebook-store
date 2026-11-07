@@ -102,5 +102,5 @@ const getAdminUsers = async (req, res) => {
 module.exports = {
   getAdminStats,
   getAdminPurchases,
-   getAdminUsers,
+  getAdminUsers,
 };
